@@ -1,5 +1,13 @@
 # Change Log
 
+## [3.0.1](https://github.com/EddyVerbruggen/nativescript-local-notifications/milestone/12?closed=1) (2018-09-10)
+[Full Changelog](https://github.com/EddyVerbruggen/nativescript-local-notifications/compare/3.0.0...3.0.1)
+
+
+## [3.0.0](https://github.com/EddyVerbruggen/nativescript-local-notifications/milestone/11?closed=1) (2018-09-02)
+[Full Changelog](https://github.com/EddyVerbruggen/nativescript-local-notifications/compare/2.0.4...3.0.0)
+
+
 ## [2.0.4](https://github.com/EddyVerbruggen/nativescript-local-notifications/tree/2.0.4) (2018-06-19)
 [Full Changelog](https://github.com/EddyVerbruggen/nativescript-local-notifications/compare/2.0.3...2.0.4)
 

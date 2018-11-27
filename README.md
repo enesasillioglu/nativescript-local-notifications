@@ -13,10 +13,21 @@
 The Local Notifications plugin allows your app to show notifications when the app is not running.
 Just like remote push notifications, but a few orders of magnitude easier to set up.
 
+> **Breaking changes in 3.0.0**: `smallIcon` is now `icon`/`silhouetteIcon`, and `largeIcon` is now `image`. Also, read the 'Setup' paragraph below.
+
 ## Installation
 From the command prompt go to your app's root folder and execute:
 ```bash
 tns plugin add nativescript-local-notifications
+```
+
+## Setup (since plugin version 3.0.0)
+Add this so for iOS 10+ we can do some wiring (set the iOS `UNUserNotificationCenter.delegate`, to be precise).
+Not needed if your app loads the plugin on startup anyway.
+You'll know you need this if on iOS 10+ notifications are not received by your app... better safe than sorry, though!
+
+```typescript
+require ("nativescript-local-notifications");
 ```
 
 #### TypeScript support
@@ -29,6 +40,9 @@ tns install typescript
 Now you can import the plugin as an object into your `.ts` file as follows:
 
 ```typescript
+// either
+import { LocalNotifications } from "nativescript-local-notifications";
+// or (if that doesn't work for you)
 import * as LocalNotifications from "nativescript-local-notifications";
 
 // then use it as:
@@ -36,7 +50,13 @@ LocalNotifications.hasPermission()
 ```
 
 ## Demo app (XML)
-If you want a quickstart, [clone our demo app](https://github.com/EddyVerbruggen/nativescript-local-notifications-demo).
+If you want a quickstart, clone our [demo app](https://github.com/EddyVerbruggen/nativescript-local-notifications-demo):
+
+```bash
+git clone https://github.com/EddyVerbruggen/nativescript-local-notifications
+cd nativescript-local-notifications/src
+npm run demo.ios # or demo.android
+```
 
 
 ## Demo app (Angular)
@@ -52,22 +72,37 @@ You can pass several options to this function, everything is optional:
 |option|description|
 |------|-----------|
 |`id`     |A number so you can easily distinguish your notifications. Default 0.|
-|`title`  |The title which is shown in the statusbar. Default empty.|
-|`body`   |The text below the title. Default empty.|
+|`title`  |The title which is shown in the statusbar. Default not set.|
+|`subtitle`  |Shown below the title on iOS, and next to the App name on Android. Default not set. All android and iOS >= 10 only.|
+|`body`   |The text below the title. If not provided, the subtitle or title (in this order or priority) will be swapped for it on iOS, as iOS won't display notifications without a body. Default not set on Android, `' '` on iOS, as otherwise the notification won't show up at all.|
+|`color` |Custom color for the notification icon and title that will be applied when the notification center is expanded. (**Android Only**)|
+|`bigTextStyle`  |Allow more than 1 line of the body text to show in the notification centre. Default `false`. (**Android Only**)|
 |`groupedMessages`| An array of atmost 5 messages that would be displayed using android's notification [inboxStyle](https://developer.android.com/reference/android/app/Notification.InboxStyle.html). Note: The array would be trimed from the top if the messages exceed five. Default not set |
 |`groupSummary`| An [inboxStyle](https://developer.android.com/reference/android/app/Notification.InboxStyle.html) notification summary. Default empty|
 |`ticker` |On Android you can show a different text in the statusbar, instead of the `body`. Default not set, so `body` is used.|
-|`at`     |A JavaScript Date object indicating when the notification should be shown. Default 'now'.|
+|`at`     |A JavaScript Date object indicating when the notification should be shown. Default not set (the notification will be shown immediately).|
 |`badge`  |On iOS (and some Android devices) you see a number on top of the app icon. On most Android devices you'll see this number in the notification center. Default not set (0).|
 |`sound`  |Notification sound. For custom notification sound (iOS only), copy the file to `App_Resources/iOS`. Set this to "default" (or do not set at all) in order to use default OS sound. Set this to `null` to suppress sound.|
-|`interval` |Set to one of `second minute hour day week month quarter year` if you want a recurring notification.|
-|`smallIcon` |On Android you can set a custom icon in the system tray. Pass in 'res://filename' (without the extension) which lives in App_Resouces/Android/drawable folders. If not passed, we look for a file named 'ic_stat_notify.png' in the App_Resources/Android/drawable folders. Default: the app icon.|
-|`largeIcon` |Same as `smallIcon`, but this one is shown when you expand the notification center. The optional file we look for is not 'ic_stat_notify.png' but 'ic_notify.png'.|
+|`interval` |Set to one of `second`, `minute`, `hour`, `day`, `week`, `month`, `year` if you want a recurring notification.|
+|`icon`|On Android you can set a custom icon in the system tray. Pass in `res://filename` (without the extension) which lives in `App_Resouces/Android/drawable` folders. If not passed, we'll look there for a file named `ic_stat_notify.png`. By default the app icon is used. Android < Lollipop (21) only (see `silhouetteIcon` below).|
+|`silhouetteIcon`|Same as `icon`, but for Android >= Lollipop (21). Should be an alpha-only image. Defaults to `res://ic_stat_notify_silhouette`, or the app icon if not present.|
+|`image` |*URL* (`http..`) of the image to use as an expandable notification image.|
+|`thumbnail` |Custom thumbnail/icon to show in the notification center (to the right) on Android, this can be either: `true` (if you want to use the `image` as the thumbnail), a resource URL (that lives in the `App_Resouces/Android/drawable` folders, e.g.: `res://filename`), or a http URL from anywhere on the web. (**Android Only**). Default not set.|
 |`ongoing` |Default is (`false`). Set whether this is an `ongoing` notification. Ongoing notifications cannot be dismissed by the user, so your application must take care of canceling them. (**Android Only**) |
 |`channel` |Default is (`Channel`). Set the channel name for Android API >= 26, which is shown when the user longpresses a  notification. (**Android Only**) |
+|`forceShowWhenInForeground` |Default is `false`. Set to `true` to always show the notification. Note that on iOS < 10 this is ignored (the notification is not shown), and on newer Androids it's currently ignored as well (the notification always shows, per platform default). |
+|`actions` |Add an array of `NotificationAction` objects (see below) to add buttons or text input to a notification. |
 
-Note that after a reboot the `smallIcon` and `largeIcon` are not restored but fall back to the default (app icon). This is a known issue and can be fixed in a future version.
+#### `NotificationAction`
 
+|option|description|
+|------|-----------|
+|`id`     |An id so you can easily distinguish your actions.|
+|`type`   |Either `button` or `input`.|
+|`title`  |The label for `type` = `button`.|
+|`launch` |Launch the app when the action completes.|
+|`submitLabel` |The submit button label for `type` = `input`.|
+|`placeholder` |The placeholder text for `type` = `input`.|
 
 ```js
   LocalNotifications.schedule([{
@@ -75,11 +110,14 @@ Note that after a reboot the `smallIcon` and `largeIcon` are not restored but fa
     title: 'The title',
     body: 'Recurs every minute until cancelled',
     ticker: 'The ticker',
+    color: new Color("red"),
     badge: 1,
     groupedMessages:["The first", "Second", "Keep going", "one more..", "OK Stop"], //android only
     groupSummary:"Summary of the grouped messages above", //android only
     ongoing: true, // makes the notification ongoing (Android only)
-    smallIcon: 'res://heart',
+    icon: 'res://heart',
+    image: "https://cdn-images-1.medium.com/max/1200/1*c3cQvYJrVezv_Az0CoDcbA.jpeg",
+    thumbnail: true,
     interval: 'minute',
     channel: 'My Channel', // default: 'Channel'
     sound: "customsound-ios.wav", // falls back to the default sound on Android
@@ -94,30 +132,26 @@ Note that after a reboot the `smallIcon` and `largeIcon` are not restored but fa
   )
 ```
 
-### Notification icons
+### Notification icons (Android)
 
-> __Background information:__ Local notifications may fail silently if you don't provide the notification icons in the correct dimensions. They may do work perfectly fine on one device but fail on the other. That's because android might fallback to your xxxhdpi launcher icon which is too big. This type of error is noticeable in logcat: `!!! FAILED BINDER TRANSACTION !!! (parcel size = 1435376)`
+These options default to `res://ic_stat_notify` and `res://ic_stat_notify_silhouette` respectively, or the app icon if not present.
 
-#### Spec for ic_stat_notify.png (smallIcon)
+`silhouetteIcon` should be an alpha-only image and will be used in Android >= Lollipop (21).
 
-[Android API Guides → Status Bar Icons](https://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html)
-
-#### Spec for ic_notify.png (largeIcon)
-
-Unfortunately it seems like there's no official guide for these. Anyways there's a [dimen](https://github.com/android/platform_frameworks_base/blob/2d5dbba/core/res/res/values/dimens.xml#L181) that's telling us the dp size which we can translate to the following spec:
+[These are the official icon size guidelines](https://developer.android.com/guide/practices/ui_guidelines/icon_design_status_bar.html),
+and [here's a great guide on how to easily create these icons on Android](https://developer.android.com/studio/write/image-asset-studio).
 
 | Density qualifier | px | dpi
-| -- | -- | --
-| ldpi | 48 x 48 | 120
-| mdpi | 64 x 64 | 160
-| hdpi | 96 x 96 | 240
-| xhdpi | 128 x 128 | 320
-| xxhdpi | 192 x 192 | 480
+| ------- | ------- | ---
+|    ldpi | 18 × 18 | 120
+|    mdpi | 24 × 24 | 160
+|    hdpi | 36 × 36 | 240
+|   xhdpi | 48 × 48 | 320
+|  xxhdpi | 72 × 72 | 480
+| xxxhdpi | 96 × 96 | 640 approx.
 
-__Don't include xxxhdpi__
+__Source:__ [Density Qualifier Docs](https://developer.android.com/guide/topics/resources/providing-resources.html#DensityQualifier)
 
-> __xxxhdpi__: Extra-extra-extra-high-density uses (__launcher icon only__, see the note in Supporting Multiple Screens); approximately 640dpi. Added in API Level 18  
-> Source: [Density Qualifier Docs](https://developer.android.com/guide/topics/resources/providing-resources.html#DensityQualifier)
 
 ### addOnMessageReceivedCallback
 Tapping a notification in the notification center will launch your app.
@@ -202,13 +236,4 @@ If the `requestPermission` or `schedule` functions previously ran you may want t
         console.log("Permission granted? " + granted);
       }
   )
-```
-
-## Help, my Android app is restarted
-When your app is launched from a notification you may notice the app is not continuing from when you
-put it in the background. To fix that, open `app/App_Resources/AndroidManifest.xml` and change the
-`launchMode` of the NativeScript activity. For instance:
-
-```xml
-<activity android:launchMode="singleTop" />
 ```
