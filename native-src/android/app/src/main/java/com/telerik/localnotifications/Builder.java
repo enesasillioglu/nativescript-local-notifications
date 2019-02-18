@@ -61,6 +61,12 @@ public final class Builder {
             .setPriority(options.optBoolean("forceShowWhenInForeground") ? 1 : 0)
             .setTicker(options.optString("ticker", null)); // Let the OS handle the default value for the ticker.
 
+        if (options.has("when")) {
+            builder
+                .setWhen(options.optLong("when"))
+                .setUsesChronometer(true);
+        }            
+
         final Object thumbnail = options.opt("thumbnail");
 
         if (thumbnail instanceof String) {
